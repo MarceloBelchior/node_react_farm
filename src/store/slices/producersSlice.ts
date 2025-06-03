@@ -198,7 +198,7 @@ export const deleteProducerAsync = createAsyncThunk(
 
 export const createFarmAsync = createAsyncThunk(
   'producers/createFarmAsync',
-  async (farm: Omit<Farm, 'id' | 'crops' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+  async (farm: Omit<Farm, 'id' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
     try {
       const newFarm = await farmApi.create(farm);
       return newFarm;

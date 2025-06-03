@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Farm, BRAZILIAN_STATES, CROP_TYPES } from '../../types';
-import { Button, Input, Select, Card, FlexContainer, theme } from '../atoms';
+import { BRAZILIAN_STATES, CROP_TYPES, Farm } from '../../types';
 import { validateFarmForm } from '../../utils/validation';
+import { Button, Card, FlexContainer, Input, Select, theme } from '../atoms';
 
 interface FarmFormProps {
   farm?: Farm;
@@ -114,7 +114,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
     vegetationArea: farm?.vegetationArea || '',
     crops: farm?.crops || [],
   });
-  
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [newCrop, setNewCrop] = useState({ name: '', harvest: '' });
 
@@ -133,7 +133,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
       ...prev,
       [field]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
@@ -152,12 +152,12 @@ export const FarmForm: React.FC<FarmFormProps> = ({
         farmId: farm?.id || '',
         createdAt: new Date().toISOString(),
       };
-      
+
       setFormData(prev => ({
         ...prev,
         crops: [...prev.crops, cropToAdd],
       }));
-      
+
       setNewCrop({ name: '', harvest: '' });
     }
   };
@@ -171,21 +171,21 @@ export const FarmForm: React.FC<FarmFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const dataToValidate = {
       ...formData,
       totalArea: Number(formData.totalArea),
       agriculturalArea: Number(formData.agriculturalArea),
       vegetationArea: Number(formData.vegetationArea),
     };
-    
+
     const validationErrors = validateFarmForm(dataToValidate);
-    
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
+
     onSubmit(dataToValidate);
   };
 
@@ -194,7 +194,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
       <FormTitle>
         {farm ? 'Editar Fazenda' : 'Nova Fazenda'}
       </FormTitle>
-      
+
       <form onSubmit={handleSubmit}>
         <FormGrid>
           <Input
@@ -206,7 +206,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
             fullWidth
             placeholder="Digite o nome da fazenda"
           />
-          
+
           <Input
             label="Cidade"
             value={formData.city}
@@ -216,7 +216,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
             fullWidth
             placeholder="Digite a cidade"
           />
-          
+
           <Select
             label="Estado"
             value={formData.state}
@@ -227,7 +227,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
             fullWidth
             placeholder="Selecione o estado"
           />
-          
+
           <Input
             label="Área Total (hectares)"
             type="number"
@@ -240,7 +240,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
             step={0.01}
             placeholder="0.00"
           />
-          
+
           <Input
             label="Área Agricultável (hectares)"
             type="number"
@@ -253,7 +253,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
             step={0.01}
             placeholder="0.00"
           />
-          
+
           <Input
             label="Área de Vegetação (hectares)"
             type="number"
@@ -266,10 +266,10 @@ export const FarmForm: React.FC<FarmFormProps> = ({
             step={0.01}
             placeholder="0.00"
           />
-          
+
           <CropSection>
             <h3>Culturas Plantadas</h3>
-            
+
             <AddCropContainer>
               <Select
                 label="Cultura"
@@ -278,14 +278,14 @@ export const FarmForm: React.FC<FarmFormProps> = ({
                 options={cropOptions}
                 placeholder="Selecione uma cultura"
               />
-              
+
               <Input
                 label="Safra"
                 value={newCrop.harvest}
                 onChange={(e) => setNewCrop(prev => ({ ...prev, harvest: e.target.value }))}
                 placeholder="Ex: 2024"
               />
-              
+
               <Button
                 type="button"
                 variant="secondary"
@@ -295,7 +295,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
                 Adicionar
               </Button>
             </AddCropContainer>
-            
+
             {formData.crops.length > 0 && (
               <CropList>
                 {formData.crops.map((crop) => (
@@ -313,7 +313,7 @@ export const FarmForm: React.FC<FarmFormProps> = ({
             )}
           </CropSection>
         </FormGrid>
-        
+
         <ButtonGroup>
           <Button
             type="button"

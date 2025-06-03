@@ -153,7 +153,7 @@ function convertBackendFarmToFrontend(backendFarm: IFarm): Farm {
   };
 }
 
-function convertFrontendFarmToBackend(frontendFarm: Omit<Farm, 'id' | 'crops' | 'createdAt' | 'updatedAt'>): Omit<IFarm, '_id' | 'crops' | 'createdAt' | 'updatedAt'> {
+function convertFrontendFarmToBackend(frontendFarm: Omit<Farm, 'id' | 'createdAt' | 'updatedAt'>): Omit<IFarm, '_id' | 'createdAt' | 'updatedAt'> {
   return {
     producerId: frontendFarm.producerId,
     name: frontendFarm.name,
@@ -162,6 +162,11 @@ function convertFrontendFarmToBackend(frontendFarm: Omit<Farm, 'id' | 'crops' | 
     totalArea: frontendFarm.totalArea,
     agriculturalArea: frontendFarm.agriculturalArea,
     vegetationArea: frontendFarm.vegetationArea,
+    crops: (frontendFarm.crops || []).map(crop => ({
+      name: crop.name,
+      harvest: crop.harvest,
+      _id: crop.id
+    })),
   };
 }
 
@@ -354,9 +359,8 @@ export const farmApi = {
     const response = await apiRequest<PaginatedResponse<IFarm>>(`/farms/producer/${producerId}`);
     return response.data.map(convertBackendFarmToFrontend);
   },
-
   // Create new farm
-  create: async (farm: Omit<Farm, 'id' | 'crops' | 'createdAt' | 'updatedAt'>): Promise<Farm> => {
+  create: async (farm: Omit<Farm, 'id' | 'createdAt' | 'updatedAt'>): Promise<Farm> => {
     const backendFarmData = convertFrontendFarmToBackend(farm);
     const backendFarm = await apiRequest<IFarm>('/farms', {
       method: 'POST',
@@ -364,7 +368,6 @@ export const farmApi = {
     });
     return convertBackendFarmToFrontend(backendFarm);
   },
-
   // Update farm
   update: async (id: string, farm: Partial<Farm>): Promise<Farm> => {
     const backendFarm = await apiRequest<IFarm>(`/farms/${id}`, {
@@ -376,6 +379,11 @@ export const farmApi = {
         totalArea: farm.totalArea,
         agriculturalArea: farm.agriculturalArea,
         vegetationArea: farm.vegetationArea,
+        crops: farm.crops ? farm.crops.map(crop => ({
+          name: crop.name,
+          harvest: crop.harvest,
+          _id: crop.id
+        })) : undefined,
       }),
     });
     return convertBackendFarmToFrontend(backendFarm);

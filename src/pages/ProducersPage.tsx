@@ -122,8 +122,7 @@ export const ProducersPage: React.FC = () => {
 
       setModal({ type: 'none' });
     }
-  };
-  const handleFarmSubmit = async (data: Omit<Farm, 'id' | 'crops' | 'createdAt' | 'updatedAt' | 'producerId'>) => {
+  }; const handleFarmSubmit = async (data: Omit<Farm, 'id' | 'createdAt' | 'updatedAt' | 'producerId'>) => {
     if (modal.type === 'farm') {
       if (modal.farm) {
         // Update existing farm
