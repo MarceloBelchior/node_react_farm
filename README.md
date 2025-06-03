@@ -7,17 +7,20 @@ Este é um sistema web para gerenciar o cadastro de produtores rurais, desenvolv
 ## 🎯 Funcionalidades
 
 ### Gestão de Produtores
+
 - ✅ Cadastro, edição e exclusão de produtores rurais
 - ✅ Validação de CPF e CNPJ
 - ✅ Interface intuitiva e responsiva
 
 ### Gestão de Fazendas
+
 - ✅ Associação de múltiplas fazendas por produtor
 - ✅ Validação da soma das áreas (agricultável + vegetação ≤ área total)
 - ✅ Registro de múltiplas culturas por safra
 - ✅ Informações detalhadas: cidade, estado, áreas
 
 ### Dashboard
+
 - ✅ Total de fazendas cadastradas
 - ✅ Total de hectares
 - ✅ Gráfico de pizza por estado
@@ -27,6 +30,7 @@ Este é um sistema web para gerenciar o cadastro de produtores rurais, desenvolv
 ## 🛠️ Tecnologias Utilizadas
 
 ### Frontend
+
 - **React 18** - Biblioteca principal
 - **TypeScript** - Tipagem estática
 - **Redux Toolkit** - Gerenciamento de estado
@@ -36,6 +40,7 @@ Este é um sistema web para gerenciar o cadastro de produtores rurais, desenvolv
 - **Atomic Design** - Arquitetura de componentes
 
 ### Estrutura do Projeto
+
 ```
 src/
 ├── components/
@@ -53,10 +58,12 @@ src/
 ## 🚀 Como Executar
 
 ### Pré-requisitos
+
 - Node.js 16+
 - npm ou yarn
 
 ### Instalação
+
 ```bash
 # Clone o repositório
 git clone <repository-url>
@@ -72,6 +79,7 @@ npm start
 A aplicação estará disponível em `http://localhost:3000`
 
 ### Scripts Disponíveis
+
 ```bash
 npm start          # Executa em modo desenvolvimento
 npm build          # Build para produção
@@ -82,6 +90,7 @@ npm test --coverage # Executa testes com coverage
 ## 🧪 Testes
 
 O projeto inclui testes unitários para:
+
 - Validações de CPF/CNPJ
 - Componentes React (Button, Forms, etc.)
 - Páginas (Dashboard, Produtores)
@@ -98,6 +107,7 @@ npm test -- --coverage --watchAll=false
 ## 📱 Responsividade
 
 O sistema é totalmente responsivo, adaptando-se a:
+
 - 📱 Mobile (< 768px)
 - 📱 Tablet (768px - 1024px)
 - 💻 Desktop (> 1024px)
@@ -105,11 +115,13 @@ O sistema é totalmente responsivo, adaptando-se a:
 ## ✅ Validações Implementadas
 
 ### Produtor
+
 - Nome obrigatório
 - CPF/CNPJ obrigatório e válido
 - Formatação automática durante digitação
 
 ### Fazenda
+
 - Nome, cidade e estado obrigatórios
 - Área total deve ser maior que zero
 - Soma das áreas agricultável e vegetação não pode exceder área total
@@ -118,6 +130,7 @@ O sistema é totalmente responsivo, adaptando-se a:
 ## 🎨 Design System
 
 ### Cores
+
 - **Primary**: Verde (#2E7D32) - representa agricultura
 - **Secondary**: Laranja (#FF6F00) - destaque
 - **Success**: Verde claro (#4CAF50)
@@ -125,6 +138,7 @@ O sistema é totalmente responsivo, adaptando-se a:
 - **Error**: Vermelho (#F44336)
 
 ### Componentes
+
 - Seguem padrões de acessibilidade
 - Estados visuais claros (hover, focus, disabled)
 - Feedback visual consistente
@@ -132,6 +146,7 @@ O sistema é totalmente responsivo, adaptando-se a:
 ## 📊 Dados Mock
 
 O sistema inclui dados de exemplo para demonstração:
+
 - 2 produtores cadastrados
 - Múltiplas fazendas com diferentes culturas
 - Dados distribuídos por diferentes estados
@@ -153,6 +168,8 @@ Este projeto foi desenvolvido como teste técnico para a Brain Agriculture.
 
 ---
 
-**Desenvolvido com ❤️ e ☕ para a Brain Agriculture**
+**Desenvolvido Marcelo Belchior - Personal**
+
 # node_react_farm
+
 # node_react_farm
