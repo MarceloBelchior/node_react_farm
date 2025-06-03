@@ -1,20 +1,20 @@
-import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
-import dotenv from 'dotenv';
 import { connectDatabase } from './config/database';
 import { logger } from './config/logger';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
-import producerRoutes from './routes/producer.routes';
-import farmRoutes from './routes/farm.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import farmRoutes from './routes/farm.routes';
 import healthRoutes from './routes/health.routes';
+import producerRoutes from './routes/producer.routes';
 
 // Load environment variables
 dotenv.config();
@@ -32,7 +32,7 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -110,7 +110,7 @@ const startServer = async (): Promise<void> => {
   try {
     // Connect to database
     await connectDatabase();
-    
+
     // Start Express server
     app.listen(PORT, () => {
       logger.info(`🚀 Brain Agriculture API Server running on port ${PORT}`);

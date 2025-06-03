@@ -1,6 +1,6 @@
 import React from 'react';
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import styled from 'styled-components';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { DashboardData } from '../../types';
 import { Card, Grid, SectionTitle, theme } from '../atoms';
 
@@ -62,27 +62,34 @@ const COLORS = [
 ];
 
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
-  // Transform data for charts
-  const stateData = Object.entries(data.farmsByState).map(([state, count]) => ({
-    name: state,
-    value: count,
-  }));
+  // Transform data for charts - use static data if properties are null/undefined
+  const stateData = data?.farmsByState?.map(item => ({
+    name: item.state,
+    value: item.count,
+  })) || [];
 
-  const cropData = Object.entries(data.farmsByCrop).map(([crop, count]) => ({
-    name: crop,
-    value: count,
-  }));
+  const cropData = data?.cropStatistics?.map(item => ({
+    name: item.crop.name,
+    value: item.count,
+    area: item.totalArea,
+    percentage: item.percentage,
+  })) || [];
 
   const landUseData = [
     {
       name: 'Área Agricultável',
-      value: data.landUse.agricultural,
-      percentage: ((data.landUse.agricultural / (data.landUse.agricultural + data.landUse.vegetation)) * 100).toFixed(1),
+      value: data?.landUseDistribution?.agricultural?.area || 0,
+      percentage: data?.landUseDistribution?.agricultural?.percentage || 0,
     },
     {
       name: 'Área de Vegetação',
-      value: data.landUse.vegetation,
-      percentage: ((data.landUse.vegetation / (data.landUse.agricultural + data.landUse.vegetation)) * 100).toFixed(1),
+      value: data?.landUseDistribution?.vegetation?.area || 0,
+      percentage: data?.landUseDistribution?.vegetation?.percentage || 0,
+    },
+    {
+      name: 'Área Não Utilizada',
+      value: data?.landUseDistribution?.unused?.area || 0,
+      percentage: data?.landUseDistribution?.unused?.percentage || 0,
     },
   ];
 
@@ -93,11 +100,11 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
         fontSize="12"
         fontWeight="bold"
@@ -132,10 +139,20 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
           <StatNumber>{data.totalFarms}</StatNumber>
           <StatLabel>Total de Fazendas</StatLabel>
         </StatCard>
-        
+
         <StatCard>
-          <StatNumber>{data.totalHectares.toLocaleString()}</StatNumber>
+          <StatNumber>{data.totalArea.toLocaleString()}</StatNumber>
           <StatLabel>Total de Hectares</StatLabel>
+        </StatCard>
+
+        <StatCard>
+          <StatNumber>{data.totalProducers}</StatNumber>
+          <StatLabel>Total de Produtores</StatLabel>
+        </StatCard>
+
+        <StatCard>
+          <StatNumber>{Math.round(data.averageFarmSize).toLocaleString()}</StatNumber>
+          <StatLabel>Média de Hectares por Fazenda</StatLabel>
         </StatCard>
       </StatsContainer>
 
@@ -201,7 +218,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ data }) => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number) => [`${value.toLocaleString()} hectares`, 'Área']}
                 />
                 <Legend />

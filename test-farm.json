@@ -1,0 +1,10 @@
+{
+  "name": "Test Farm",
+  "city": "São Paulo",
+  "state": "SP",
+  "totalArea": 100,
+  "agriculturalArea": 60,
+  "vegetationArea": 30,
+  "crops": ["Soja", "Milho"],
+  "producerId": "683f2c15ef80d24658e93496"
+}

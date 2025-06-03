@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Producer } from '../../types';
-import { Button, Input, Card, FlexContainer, theme } from '../atoms';
-import { validateProducerForm, formatCpfCnpj } from '../../utils/validation';
+import { formatCpfCnpj, validateProducerForm } from '../../utils/validation';
+import { Button, Card, FlexContainer, Input, theme } from '../atoms';
 
 interface ProducerFormProps {
   producer?: Producer;
@@ -53,7 +53,7 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
     cpfCnpj: producer?.cpfCnpj || '',
     farms: producer?.farms || [],
   });
-  
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (field: string, value: string) => {
@@ -61,7 +61,7 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
       ...prev,
       [field]: field === 'cpfCnpj' ? formatCpfCnpj(value) : value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
@@ -73,14 +73,14 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationErrors = validateProducerForm(formData);
-    
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
+
     onSubmit(formData);
   };
 
@@ -89,7 +89,7 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
       <FormTitle>
         {producer ? 'Editar Produtor' : 'Novo Produtor'}
       </FormTitle>
-      
+
       <form onSubmit={handleSubmit}>
         <FormGrid>
           <Input
@@ -101,7 +101,7 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
             fullWidth
             placeholder="Digite o nome do produtor"
           />
-          
+
           <Input
             label="CPF ou CNPJ"
             value={formData.cpfCnpj}
@@ -112,7 +112,7 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
             placeholder="000.000.000-00 ou 00.000.000/0000-00"
           />
         </FormGrid>
-        
+
         <ButtonGroup>
           <Button
             type="button"

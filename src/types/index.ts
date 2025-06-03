@@ -2,6 +2,14 @@ export interface Producer {
   id: string;
   cpfCnpj: string;
   name: string;
+  email: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
   farms: Farm[];
   createdAt: string;
   updatedAt: string;
@@ -31,12 +39,51 @@ export interface Crop {
 
 export interface DashboardData {
   totalFarms: number;
-  totalHectares: number;
-  farmsByState: { [state: string]: number };
-  farmsByCrop: { [crop: string]: number };
-  landUse: {
-    agricultural: number;
-    vegetation: number;
+  totalProducers: number;
+  totalArea: number;
+  totalAgriculturalArea: number;
+  totalVegetationArea: number;
+  averageFarmSize: number;
+  farmsByState: Array<{
+    state: string;
+    count: number;
+    totalArea: number;
+  }>;
+  cropStatistics: Array<{
+    count: number;
+    totalArea: number;
+    crop: {
+      name: string;
+      harvest: string;
+      plantedArea: number;
+      createdAt: string;
+    };
+    percentage: number;
+  }>;
+  landUseDistribution: {
+    agricultural: {
+      area: number;
+      percentage: number;
+    };
+    vegetation: {
+      area: number;
+      percentage: number;
+    };
+    unused: {
+      area: number;
+      percentage: number;
+    };
+  };
+  topStates: Array<{
+    state: string;
+    farmCount: number;
+    totalArea: number;
+    averageSize: number;
+  }>;
+  recentActivity: {
+    newProducersLastMonth: number;
+    newFarmsLastMonth: number;
+    totalGrowthPercentage: number;
   };
 }
 
@@ -45,8 +92,8 @@ export interface FormErrors {
 }
 
 export const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 
-  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
+  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
   'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ] as const;
 

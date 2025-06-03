@@ -9,47 +9,52 @@ import { logger } from '../config/logger';
  */
 export const getHealthCheck = async (req: Request, res: Response) => {
   try {
+    const dbStatus = getConnectionStatus(mongoose.connection.readyState);
     const healthCheck = {
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-      version: process.env.npm_package_version || '1.0.0',
-      database: {
-        status: 'connected',
-        name: mongoose.connection.name,
-        host: mongoose.connection.host,
-        port: mongoose.connection.port,
-        readyState: getConnectionStatus(mongoose.connection.readyState)
+      status: 'ok',
+      info: {
+        database: { status: dbStatus === 'connected' ? 'up' : 'down' },
+        memory_heap: { status: 'up' },
+        memory_rss: { status: 'up' },
+        storage: { status: 'up' }
       },
-      memory: {
-        used: Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100,
-        total: Math.round((process.memoryUsage().heapTotal / 1024 / 1024) * 100) / 100,
-        external: Math.round((process.memoryUsage().external / 1024 / 1024) * 100) / 100
-      },
-      cpu: {
-        usage: process.cpuUsage()
+      error: {},
+      details: {
+        database: { status: dbStatus === 'connected' ? 'up' : 'down' },
+        memory_heap: { status: 'up' },
+        memory_rss: { status: 'up' },
+        storage: { status: 'up' }
       }
     };
 
-    logger.info('Health check requested', { 
-      ip: req.ip, 
+    logger.info('Health check requested', {
+      ip: req.ip,
       userAgent: req.get('User-Agent'),
-      status: healthCheck.status 
-    });
-
-    res.status(200).json(healthCheck);
+      status: healthCheck.status
+    }); res.status(200).json(healthCheck);
   } catch (error) {
-    logger.error('Health check failed', { 
+    logger.error('Health check failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined 
+      stack: error instanceof Error ? error.stack : undefined
     });
 
     res.status(503).json({
-      status: 'ERROR',
-      timestamp: new Date().toISOString(),
-      error: 'Health check failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      status: 'error',
+      info: {
+        database: { status: 'down' },
+        memory_heap: { status: 'unknown' },
+        memory_rss: { status: 'unknown' },
+        storage: { status: 'unknown' }
+      },
+      error: {
+        message: error instanceof Error ? error.message : 'Health check failed'
+      },
+      details: {
+        database: { status: 'down' },
+        memory_heap: { status: 'unknown' },
+        memory_rss: { status: 'unknown' },
+        storage: { status: 'unknown' }
+      }
     });
   }
 };

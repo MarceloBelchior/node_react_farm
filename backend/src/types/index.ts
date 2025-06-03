@@ -2,6 +2,14 @@ export interface IProducer {
   _id?: string;
   cpfCnpj: string;
   name: string;
+  email: string;
+  phone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -1,29 +1,46 @@
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Producer, Farm } from '../types';
-import { 
-  selectAllProducers, 
-  addProducer, 
-  updateProducer, 
-  deleteProducer,
-  addFarm,
-  updateFarm,
-  deleteFarm,
-} from '../store/slices/producersSlice';
-import { PageTitle, Button, FlexContainer } from '../components/atoms';
-import { ProducerForm, FarmForm } from '../components/molecules';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Button, FlexContainer, PageTitle } from '../components/atoms';
+import { FarmForm, ProducerForm } from '../components/molecules';
 import { ProducersList } from '../components/organisms';
+import { useApi } from '../hooks';
+import { AppDispatch, RootState } from '../store';
+import {
+  clearError,
+  createFarmAsync,
+  createProducerAsync,
+  deleteFarmAsync,
+  deleteProducerAsync,
+  fetchFarms,
+  fetchProducers,
+  selectAllProducers,
+  selectError,
+  selectLoading,
+  selectOperationLoading,
+  updateFarmAsync,
+  updateProducerAsync,
+} from '../store/slices/producersSlice';
+import { Farm, Producer } from '../types';
 
-type ModalState = 
+type ModalState =
   | { type: 'none' }
   | { type: 'producer'; producer?: Producer }
   | { type: 'farm'; producerId: string; farm?: Farm };
 
 export const ProducersPage: React.FC = () => {
-  const dispatch = useDispatch();
-  const producers = useSelector(selectAllProducers);
+  const dispatch = useDispatch<AppDispatch>();
+  const producers = useSelector((state: RootState) => selectAllProducers(state));
+  const loading = useSelector((state: RootState) => selectLoading(state));
+  const operationLoading = useSelector((state: RootState) => selectOperationLoading(state));
+  const error = useSelector((state: RootState) => selectError(state));
   const [modal, setModal] = useState<ModalState>({ type: 'none' });
-  const [loading, setLoading] = useState(false);
+  const api = useApi();
+
+  // Fetch data on component mount
+  useEffect(() => {
+    dispatch(fetchProducers());
+    dispatch(fetchFarms());
+  }, [dispatch]);
 
   const handleAddProducer = () => {
     setModal({ type: 'producer' });
@@ -33,9 +50,17 @@ export const ProducersPage: React.FC = () => {
     setModal({ type: 'producer', producer });
   };
 
-  const handleDeleteProducer = (id: string) => {
+  const handleDeleteProducer = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este produtor? Esta ação não pode ser desfeita.')) {
-      dispatch(deleteProducer(id));
+      api.callApi(deleteProducerAsync, id, {
+        onSuccess: () => {
+          // After successful deletion, refresh the list
+          dispatch(fetchProducers());
+        },
+        onError: (errorMsg) => {
+          console.error('Failed to delete producer:', errorMsg);
+        }
+      });
     }
   };
 
@@ -47,61 +72,98 @@ export const ProducersPage: React.FC = () => {
     setModal({ type: 'farm', producerId, farm });
   };
 
-  const handleDeleteFarm = (producerId: string, farmId: string) => {
+  const handleDeleteFarm = async (farmId: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta fazenda? Esta ação não pode ser desfeita.')) {
-      dispatch(deleteFarm({ producerId, farmId }));
+      api.callApi(deleteFarmAsync, farmId, {
+        onSuccess: () => {
+          // After successful deletion, refresh the list
+          dispatch(fetchFarms());
+          dispatch(fetchProducers());
+        },
+        onError: (errorMsg) => {
+          console.error('Failed to delete farm:', errorMsg);
+        }
+      });
     }
   };
 
-  const handleProducerSubmit = async (data: Omit<Producer, 'id' | 'createdAt' | 'updatedAt'>) => {
-    setLoading(true);
-    
-    try {
-      if (modal.type === 'producer' && modal.producer) {
-        // Update existing producer
-        dispatch(updateProducer({
-          ...modal.producer,
-          ...data,
-        }));
-      } else {
-        // Add new producer
-        dispatch(addProducer(data));
-      }
-      
+  const handleProducerSubmit = async (data: Omit<Producer, 'id' | 'farms' | 'createdAt' | 'updatedAt'>) => {
+    if (modal.type === 'producer' && modal.producer) {
+      // Update existing producer
+      api.callApi(
+        updateProducerAsync,
+        { id: modal.producer.id, data: { ...data } },
+        {
+          onSuccess: () => {
+            setModal({ type: 'none' });
+            dispatch(fetchProducers());
+          },
+          onError: (errorMsg) => {
+            console.error('Failed to update producer:', errorMsg);
+          }
+        }
+      );
+    } else {
+      // Add new producer
+      api.callApi(
+        createProducerAsync,
+        data,
+        {
+          onSuccess: () => {
+            setModal({ type: 'none' });
+
+            dispatch(fetchProducers());
+          },
+          onError: (errorMsg) => {
+            console.error('Failed to create producer:', errorMsg);
+          }
+        }
+      );
+
       setModal({ type: 'none' });
-    } catch (error) {
-      console.error('Error saving producer:', error);
-    } finally {
-      setLoading(false);
     }
   };
-
-  const handleFarmSubmit = async (data: Omit<Farm, 'id' | 'createdAt' | 'updatedAt' | 'producerId'>) => {
-    setLoading(true);
-    
-    try {
-      if (modal.type === 'farm') {
-        if (modal.farm) {
-          // Update existing farm
-          dispatch(updateFarm({
-            ...modal.farm,
+  const handleFarmSubmit = async (data: Omit<Farm, 'id' | 'crops' | 'createdAt' | 'updatedAt' | 'producerId'>) => {
+    if (modal.type === 'farm') {
+      if (modal.farm) {
+        // Update existing farm
+        api.callApi(
+          updateFarmAsync,
+          {
+            id: modal.farm.id,
+            data: { ...data },
+          },
+          {
+            onSuccess: () => {
+              setModal({ type: 'none' });
+              dispatch(fetchFarms());
+              dispatch(fetchProducers());
+            },
+            onError: (errorMsg) => {
+              console.error('Failed to update farm:', errorMsg);
+            }
+          }
+        );
+      } else {
+        // Add new farm
+        api.callApi(
+          createFarmAsync,
+          {
             ...data,
             producerId: modal.producerId,
-          }));
-        } else {
-          // Add new farm
-          dispatch(addFarm({
-            producerId: modal.producerId,
-            farm: data,
-          }));
-        }
+          },
+          {
+            onSuccess: () => {
+              setModal({ type: 'none' });
+              dispatch(fetchFarms());
+              dispatch(fetchProducers());
+            },
+            onError: (errorMsg) => {
+              console.error('Failed to create farm:', errorMsg);
+            }
+          }
+        );
       }
-      
-      setModal({ type: 'none' });
-    } catch (error) {
-      console.error('Error saving farm:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -109,25 +171,51 @@ export const ProducersPage: React.FC = () => {
     setModal({ type: 'none' });
   };
 
+  const handleClearError = () => {
+    dispatch(clearError());
+  };
+
   return (
     <div>
       <FlexContainer justify="space-between" align="center" style={{ marginBottom: '2rem' }}>
         <PageTitle style={{ margin: 0 }}>Produtores Rurais</PageTitle>
-        <Button onClick={handleAddProducer}>
-          + Novo Produtor
+        <Button onClick={handleAddProducer} disabled={operationLoading.create}>
+          {operationLoading.create ? 'Criando...' : '+ Novo Produtor'}
         </Button>
       </FlexContainer>
 
-      <ProducersList
-        producers={producers}
-        onEditProducer={handleEditProducer}
-        onDeleteProducer={handleDeleteProducer}
-        onAddFarm={handleAddFarm}
-        onEditFarm={handleEditFarm}
-        onDeleteFarm={handleDeleteFarm}
-      />
+      {error && (
+        <div style={{
+          backgroundColor: '#fee',
+          color: '#c00',
+          padding: '1rem',
+          borderRadius: '4px',
+          marginBottom: '1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <span>{error}</span>
+          <Button onClick={handleClearError}>
+            ✕
+          </Button>
+        </div>
+      )}
 
-      {/* Producer Form Modal */}
+      {loading ? (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <p>Carregando produtores...</p>
+        </div>
+      ) : (
+        <ProducersList
+          producers={producers}
+          onEditProducer={handleEditProducer}
+          onDeleteProducer={handleDeleteProducer}
+          onAddFarm={handleAddFarm}
+          onEditFarm={handleEditFarm}
+          onDeleteFarm={handleDeleteFarm}
+        />
+      )}          {/* Producer Form Modal */}
       {modal.type === 'producer' && (
         <div style={{
           position: 'fixed',
@@ -145,7 +233,7 @@ export const ProducersPage: React.FC = () => {
           <div style={{
             backgroundColor: 'white',
             borderRadius: '8px',
-            maxWidth: '90vw',
+            maxWidth: '500px',
             maxHeight: '90vh',
             overflow: 'auto',
             width: '100%',
@@ -154,7 +242,7 @@ export const ProducersPage: React.FC = () => {
               producer={modal.producer}
               onSubmit={handleProducerSubmit}
               onCancel={handleCloseModal}
-              loading={loading}
+              loading={operationLoading.create || operationLoading.update}
             />
           </div>
         </div>
@@ -174,20 +262,19 @@ export const ProducersPage: React.FC = () => {
           justifyContent: 'center',
           zIndex: 1000,
           padding: '1rem',
+        }}>          <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          maxWidth: '600px',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          width: '100%',
         }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            maxWidth: '90vw',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            width: '100%',
-          }}>
             <FarmForm
               farm={modal.farm}
               onSubmit={handleFarmSubmit}
               onCancel={handleCloseModal}
-              loading={loading}
+              loading={operationLoading.create || operationLoading.update}
             />
           </div>
         </div>

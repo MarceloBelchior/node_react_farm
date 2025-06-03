@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { Producer } from '../models/Producer';
-import { Farm } from '../models/Farm';
-import { IApiResponse, IQueryOptions } from '../types';
 import { logger } from '../config/logger';
+import { Farm } from '../models/Farm';
+import { Producer } from '../models/Producer';
+import { IApiResponse, IQueryOptions } from '../types';
 
 export class ProducerController {
   // Get all producers with pagination and search
@@ -13,21 +13,20 @@ export class ProducerController {
         limit = 10,
         search = '',
         sort = '-createdAt'
-      }: IQueryOptions = req.query;
-
-      const pageNum = Math.max(1, parseInt(page.toString()));
+      }: IQueryOptions = req.query; const pageNum = Math.max(1, parseInt(page.toString()));
       const limitNum = Math.min(100, Math.max(1, parseInt(limit.toString())));
       const skip = (pageNum - 1) * limitNum;
 
       // Build search query
       const searchQuery = search
         ? {
-            $or: [
-              { name: { $regex: search, $options: 'i' } },
-              { cpfCnpj: { $regex: search.replace(/[^\d]/g, ''), $options: 'i' } }
-            ]
-          }
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { cpfCnpj: { $regex: search.replace(/[^\d]/g, ''), $options: 'i' } }
+          ]
+        }
         : {};
+      console.log('DEBUG /api/producers', { searchQuery, skip, limitNum, sort });
 
       // Execute queries in parallel
       const [producers, total] = await Promise.all([
@@ -72,6 +71,7 @@ export class ProducerController {
       res.status(200).json(response);
     } catch (error) {
       logger.error('Error fetching producers:', error);
+      console.error('DEBUG ERROR /api/producers', error);
       const response: IApiResponse = {
         success: false,
         error: 'Erro ao buscar produtores'
@@ -84,9 +84,9 @@ export class ProducerController {
   static async getById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const producer = await Producer.findById(id).lean();
-      
+
       if (!producer) {
         const response: IApiResponse = {
           success: false,
@@ -139,7 +139,7 @@ export class ProducerController {
       res.status(201).json(response);
     } catch (error) {
       logger.error('Error creating producer:', error);
-      
+
       // Check for duplicate CPF/CNPJ
       if ((error as any).code === 11000) {
         const response: IApiResponse = {
@@ -162,7 +162,7 @@ export class ProducerController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const producer = await Producer.findByIdAndUpdate(
         id,
         req.body,
@@ -189,7 +189,7 @@ export class ProducerController {
       res.status(200).json(response);
     } catch (error) {
       logger.error('Error updating producer:', error);
-      
+
       // Check for duplicate CPF/CNPJ
       if ((error as any).code === 11000) {
         const response: IApiResponse = {
@@ -212,10 +212,10 @@ export class ProducerController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       // Check if producer has farms
       const farmCount = await Farm.countDocuments({ producerId: id });
-      
+
       if (farmCount > 0) {
         const response: IApiResponse = {
           success: false,
@@ -250,7 +250,8 @@ export class ProducerController {
         success: false,
         error: 'Erro ao excluir produtor'
       };
-      res.status(500).json(response);    }
+      res.status(500).json(response);
+    }
   }
 }
 
