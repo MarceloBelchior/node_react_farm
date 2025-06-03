@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: brain-agriculture-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: brain_agriculture
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./backend/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - brain-agriculture-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: brain-agriculture-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/brain_agriculture?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRE: 7d
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - brain-agriculture-network
+    volumes:
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  # Frontend (Development)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: brain-agriculture-frontend
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: http://localhost:3001/api
+      CHOKIDAR_USEPOLLING: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - brain-agriculture-network
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  brain-agriculture-network:
+    driver: bridge
