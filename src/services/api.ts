@@ -287,9 +287,8 @@ async function apiRequest<T>(
 export const producerApi = {
   // Get all producers
   getAll: async (): Promise<Producer[]> => {
-    const backendProducers = await apiRequest<IProducer[]>('/producers');
-
-    return backendProducers.map(convertBackendProducerToFrontend);
+    const response = await apiRequest<PaginatedResponse<IProducer>>('/producers');
+    return response.data.map(convertBackendProducerToFrontend);
   },
 
   // Get producer by ID
@@ -350,11 +349,10 @@ export const farmApi = {
     const backendFarm = await apiRequest<IFarm>(`/farms/${id}`);
     return convertBackendFarmToFrontend(backendFarm);
   },
-
   // Get farms by producer ID
   getByProducerId: async (producerId: string): Promise<Farm[]> => {
-    const backendFarms = await apiRequest<IFarm[]>(`/farms/producer/${producerId}`);
-    return backendFarms.map(convertBackendFarmToFrontend);
+    const response = await apiRequest<PaginatedResponse<IFarm>>(`/farms/producer/${producerId}`);
+    return response.data.map(convertBackendFarmToFrontend);
   },
 
   // Create new farm

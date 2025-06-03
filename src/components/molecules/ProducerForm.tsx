@@ -4,6 +4,22 @@ import { Producer } from '../../types';
 import { formatCpfCnpj, validateProducerForm } from '../../utils/validation';
 import { Button, Card, FlexContainer, Input, theme } from '../atoms';
 
+// Define types for form errors
+interface AddressErrors {
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+}
+
+interface FormErrors {
+  name?: string;
+  cpfCnpj?: string;
+  email?: string;
+  phone?: string;
+  address?: AddressErrors;
+}
+
 interface ProducerFormProps {
   producer?: Producer;
   onSubmit: (data: Omit<Producer, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -51,12 +67,17 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
   const [formData, setFormData] = useState({
     name: producer?.name || '',
     cpfCnpj: producer?.cpfCnpj || '',
+    email: producer?.email || '',
+    phone: producer?.phone || '',
+    address: producer?.address || {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    },
     farms: producer?.farms || [],
   });
-
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  const handleInputChange = (field: string, value: string) => {
+  const [errors, setErrors] = useState<FormErrors>({}); const handleInputChange = (field: keyof Omit<FormErrors, 'address'>, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: field === 'cpfCnpj' ? formatCpfCnpj(value) : value,
@@ -66,22 +87,50 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
-        [field]: '',
+        [field]: undefined,
       }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddressChange = (field: keyof AddressErrors, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        [field]: value,
+      },
+    }));
 
-    const validationErrors = validateProducerForm(formData);
+    // Clear error when user starts typing
+    if (errors.address && errors.address[field]) {
+      setErrors(prev => ({
+        ...prev,
+        address: {
+          ...prev.address as AddressErrors,
+          [field]: undefined,
+        },
+      }));
+    }
+  };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); const validationErrors = validateProducerForm(formData) as FormErrors;
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    onSubmit(formData);
+    // Ensure all required fields are included when submitting
+    const producerData: Omit<Producer, 'id' | 'createdAt' | 'updatedAt'> = {
+      name: formData.name,
+      cpfCnpj: formData.cpfCnpj,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      farms: formData.farms || [],
+    };
+
+    onSubmit(producerData);
   };
 
   return (
@@ -100,9 +149,7 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
             required
             fullWidth
             placeholder="Digite o nome do produtor"
-          />
-
-          <Input
+          />          <Input
             label="CPF ou CNPJ"
             value={formData.cpfCnpj}
             onChange={(e) => handleInputChange('cpfCnpj', e.target.value)}
@@ -110,6 +157,67 @@ export const ProducerForm: React.FC<ProducerFormProps> = ({
             required
             fullWidth
             placeholder="000.000.000-00 ou 00.000.000/0000-00"
+          />
+
+          <Input
+            label="E-mail"
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            error={errors.email}
+            required
+            fullWidth
+            type="email"
+            placeholder="exemplo@email.com"
+          />
+
+          <Input
+            label="Telefone"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            error={errors.phone}
+            required
+            fullWidth
+            placeholder="(00) 00000-0000"
+          />
+
+          <Input
+            label="Rua"
+            value={formData.address.street}
+            onChange={(e) => handleAddressChange('street', e.target.value)}
+            error={errors.address?.street}
+            required
+            fullWidth
+            placeholder="Nome da rua, número"
+          />
+
+          <Input
+            label="Cidade"
+            value={formData.address.city}
+            onChange={(e) => handleAddressChange('city', e.target.value)}
+            error={errors.address?.city}
+            required
+            fullWidth
+            placeholder="Nome da cidade"
+          />
+
+          <Input
+            label="Estado"
+            value={formData.address.state}
+            onChange={(e) => handleAddressChange('state', e.target.value)}
+            error={errors.address?.state}
+            required
+            fullWidth
+            placeholder="UF"
+          />
+
+          <Input
+            label="CEP"
+            value={formData.address.zipCode}
+            onChange={(e) => handleAddressChange('zipCode', e.target.value)}
+            error={errors.address?.zipCode}
+            required
+            fullWidth
+            placeholder="00000-000"
           />
         </FormGrid>
 
